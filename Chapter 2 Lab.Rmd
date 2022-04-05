@@ -1,0 +1,160 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+
+# Question 1 
+#a 
+```{r}
+college <- read.csv("College.csv")
+```
+
+#b
+```{r}
+rownames (college) <- college[, 1]
+#View (college)
+college <- college[, -1]
+View (college)
+```
+
+#c
+```{r}
+#summary(college)
+college$Private <- as.factor(college$Private)
+pairs(college[,1:10])
+Elite <- rep ("No", nrow (college))
+Elite[college$Top10perc > 50] <- " Yes "
+Elite <- as.factor(Elite)
+college <- data.frame (college, Elite)
+summary(college)
+plot(college$Outstate~college$Elite)
+
+par(mfrow = c(3, 3))
+hist(college$Apps)
+hist(college$Accept)
+hist(college$Enroll)
+hist(college$Top10perc)
+hist(college$Top25perc)
+hist(college$F.Undergrad)
+hist(college$P.Undergrad)
+hist(college$Outstate)
+hist(college$Room.Board)
+
+# Based on the data I can confirm and support multiple claims
+# Apps: there are more lower numbered applicants vs higher number applicant schools 
+# The graph between applicants to accept makes sense. Ther are a lot less acceptance
+# Same thing for enroll, there are even less enrollments than acceptances 
+# Based on the boxplots, more elite schools tend to have more students from out of state which makes since.
+```
+
+
+# 10 
+# a) 
+```{r}
+library(ISLR2)
+Boston <- Boston
+?Boston
+dim(Boston)
+```
+
+# b)
+```{r}
+par(mfrow = c(3, 4))
+plot(Boston$zn)
+plot(Boston$indus)
+plot(Boston$chas)
+plot(Boston$nox)
+plot(Boston$rm)
+plot(Boston$age)
+plot(Boston$dis)
+plot(Boston$rad)
+plot(Boston$tax)
+plot(Boston$ptratio)
+plot(Boston$lstat)
+plot(Boston$medv)
+
+# From what I can tell from the plots, there seems to be some sort of relationship between dis, age, medv, lstat
+# another relationship between nox and tax maybe
+
+```
+
+# c
+```{r}
+plot(Boston$crim)
+# Boston crim has a potential direct relationship between tax and rad. We can tell based off the plots
+```
+
+# d
+```{r}
+cat(("Crime\n"))
+summary(Boston$crim)
+cat("________________________________________________________________________\n")
+cat(("Tax\n"))
+summary(Boston$tax)
+cat("________________________________________________________________________\n")
+cat(("Pupil-Teacher\n"))
+summary(Boston$ptratio)
+cat("________________________________________________________________________\n")
+summary(Boston)
+
+# there is a huge jump in crime from the 3rd qu to the max meaning there are defineitly some outliers
+# There is not a huge jump in tax 
+# there is not a huge jump in pupil- teacher as well. 
+```
+
+# e 
+```{r}
+library(dplyr)
+Boston %>%
+  summarise(Charles_River = sum(chas), Non_Charles_River = (n() - sum(chas)))
+# Only 35!
+```
+
+# f 
+```{r}
+summary(Boston$ptratio)
+# 19.05!
+```
+
+# g 
+```{r}
+Boston[order(Boston$medv),][1,]
+# Suburb 339 has a median of 5000$
+# when comparing suburb 339 with the baseline statistics as we can see in "# d" The distrubition is meaningless! It is random and does not follow a speicifc pattern. Yes there are some information that can be dirived such as it has a very high crime rate, yet that is merely an observavtion, not a finding as the information is laid out right infront of us.  
+```
+
+# h
+```{r}
+Boston %>%
+  filter(rm >7) %>%
+  summarise(Frequancy = n())
+
+Boston %>%
+  filter(rm >8) %>%
+  summarise(Frequancy = n())
+
+# there are 64 suburbs with more than 7 rooms
+# there are 13 suburbs with more than 8 rooms
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

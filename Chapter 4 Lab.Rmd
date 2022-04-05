@@ -1,0 +1,220 @@
+---
+title: "Chapter 4 Lab"
+author: "Noah Foilb"
+date: "4/3/2022"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Libraries
+```{r}
+library(ISLR)
+library(caret)
+library(dplyr)
+library(MASS)
+```
+
+# 10
+
+# Data
+```{r}
+nrow(Weekly)
+summary(Weekly)
+```
+
+
+# A)
+```{r}
+pairs(Weekly)
+# A good amount of the data seems to be highly correlated. While this is great, we should keep this in mind as to not overfit the model with confounding factors
+```
+
+# B)
+```{r}
+M1 <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, family = "binomial")
+summary(M1)
+confint(M1)
+# they are all insignificant as their _ values are greater than .05 except Lag2, and their 95% confit intervals pass over 0 except Lag2. I would say this is because they are all highly correlated with eachother. 
+```
+
+# C)
+```{r}
+Prob <- predict(M1, Weekly, type = "response")
+Pred <- rep("Down", 1089)
+Pred[Prob>.5] = "Up"
+Pred <- as.factor(Pred)
+confusionMatrix(Pred,Weekly$Direction)
+
+# We can see that this Model has an extremely high Specitivity and not the best accuracy. What we can also tell is that it tends to Guess Up more than Down and is pretty 50/50 for each guess. That is to be expected as the model used for this confusion matrix wasnt statistically significant.
+```
+# D) 
+```{r}
+Train <- Weekly %>%
+  filter(Year != 2009 & Year!= 2010)
+  
+Test <- Weekly %>%
+  filter(Year == 2009 | Year == 2010)
+```
+
+```{r}
+M2 <- glm(Direction ~ Lag2, data = Train, family = "binomial")
+summary(M2)
+confint(M2)
+Prob <- predict(M2, Test, type = "response")
+Pred <- rep("Down", 104)
+Pred[Prob>.5] = "Up"
+Pred <- as.factor(Pred)
+confusionMatrix(Pred,Test$Direction)
+
+# This model is more accurate than the other model as it is more statistically significant
+```
+
+# E) 
+```{r}
+M3 <- lda(Direction ~ Lag2, data = Train)
+summary(M3)
+Prob <- predict(M3, Test, type = "response")
+Pred <- rep("Down", 104)
+Pred[Prob$posterior[,1]>.4] = "Up"
+Pred <- as.factor(Pred)
+confusionMatrix(Pred,Test$Direction)
+
+# With an accuracy of 52.88% it is not better nor more significant than the other model. 
+```
+
+# F)
+```{r}
+M3 <- qda(Direction ~ Lag2, data = Train)
+summary(M3)
+Prob <- predict(M3, Test, type = "response")
+Pred <- rep("Down", 104)
+Pred[as.numeric(Prob$posterior[,1])>.44] = "Up"
+Pred <- as.factor(Pred)
+confusionMatrix(Pred,Test$Direction)
+
+# This model isnt statisitically significant as well, this model is the worst model so far
+```
+
+# G) 
+```{r}
+Knn <- knn3(Direction ~ Lag2, data = Train, k = 1)
+summary(Knn)
+Pred <- predict(Knn, Test, type = "class")
+confusionMatrix(Pred,Test$Direction)
+
+# With a .5 Accuracy, this model isnt better than the other models as well. 
+```
+
+# H)
+```{r}
+# The GLM had by far the best accuracy by having an accuracy of over 10% of any other model. NOt only this but the missclassification rate is the lowest. 
+```
+
+# G)
+```{r}
+# Different Knn values
+Knn <- knn3(Direction ~ Lag2, data = Train, k = 2)
+summary(Knn)
+Pred <- predict(Knn, Test, type = "class")
+confusionMatrix(Pred,Test$Direction)
+Knn <- knn3(Direction ~ Lag2, data = Train, k = 3)
+summary(Knn)
+Pred <- predict(Knn, Test, type = "class")
+confusionMatrix(Pred,Test$Direction)
+
+# Different Knn values fo not change much. 
+```
+```{r}
+plot(Weekly$Lag2,Weekly$Lag3, col = Weekly$Direction)
+# Doesnt seem to have a correlation with Lag. 
+```
+
+# 13 
+# Dataset
+```{r}
+summary(Boston)
+Boston <- Boston
+?Boston
+```
+
+# Split the dataset by the median of crime 
+```{r}
+median_crime = median(Boston$crim)
+crim_median <- rep(0, 506)
+crim_median[Boston$crim > median_crime] = 1
+crim_median <- as.factor(crim_median)
+Boston <- data.frame(Boston, crim_median)
+```
+
+# Look into the data
+```{r}
+pairs(Boston)
+```
+
+# Train Test split
+```{r}
+set.seed(100)
+train <- Boston %>% sample_frac(size = 0.75)
+test <- Boston %>% setdiff(train)
+```
+
+# Glm
+```{r}
+M1 <- glm(crim_median~nox + medv + dis, data = train, family = binomial)
+summary(M1)
+# Get rid of Dis
+M1 <- glm(crim_median~nox + medv, data = train, family = binomial)
+summary(M1)
+```
+
+# COnfusion Matrix
+```{r}
+Prob <- predict(M1, test, type =  "response")
+Pred <- rep(0, 126)
+Pred[Prob>.35] = 1
+Pred <- as.factor(Pred)
+confusionMatrix(Pred,test$crim_median)
+
+# THis is an insane model. Just looking at 92.06% is an insane 
+```
+
+# lda
+```{r}
+lda <- lda(crim_median~nox + medv, data = train)
+Prob <- predict(lda, test, type = "Response")
+Pred <- rep(0, 126)
+Pred[Prob$posterior[,1] >.5] = 1
+Pred <- as.factor(Pred)
+confusionMatrix(Pred,test$crim_median)
+```
+
+# Knn
+```{r}
+Knn <- knn3(crim_median~nox + medv, data = train, k = 1)
+summary(Knn)
+Pred <- predict(Knn, test, type = "class")
+confusionMatrix(Pred,test$crim_median)
+Knn <- knn3(crim_median~nox + medv, data = train, k = 2)
+summary(Knn)
+Pred <- predict(Knn, test, type = "class")
+confusionMatrix(Pred,test$crim_median)
+Knn <- knn3(crim_median~nox + medv, data = train, k = 3)
+summary(Knn)
+Pred <- predict(Knn, test, type = "class")
+confusionMatrix(Pred,test$crim_median)
+
+# Knn with k = 1 is the best 
+```
+
+```{r}
+# Findings from each model varies, the best model was by far logistic regression as the misclassification rate is the lowest by far with an accuracy of 92%. This accuracy is scary accurate and could make this model usable in real life. 
+```
+
+
+

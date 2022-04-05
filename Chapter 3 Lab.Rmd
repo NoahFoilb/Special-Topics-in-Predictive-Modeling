@@ -1,0 +1,123 @@
+---
+title: "DSE predictive modeling Chapter 3"
+author: "Noah Foilb"
+date: "3/27/2022"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Libraries and daat
+```{r}
+library(ISLR)
+library(MASS)
+head(Auto)
+summary(Auto)
+?Auto
+```
+
+```{r}
+pairs(Auto)
+```
+
+```{r}
+cor(subset(Auto, select = -name))
+```
+
+```{r}
+m1 <- lm(mpg ~., data = subset(Auto, select = -name))
+summary(m1)
+```
+
+```{r}
+#i YES! while not all predictors are statistically significant in this model, the R^2 is high! There is some sort of relationship between them in order for a model to explain that much variance.
+
+#ii From this model, displacement, weight, year, and origin. This is only an analysis from the combined model. This doesn't mean that they cannot be statistically insignificant when predicting mpg in a different model. 
+
+#iii Since year ranges from 70 - 84 as it is the model year, we would take the value of the year and multiply it by .75.While first impressions of this coefficient would make year seem more important that isn't true. For example look at weight. While weight's coefficient is much less than year, the range of weights values is significantly higher (1613 - 5140). In order to compensate, it needs to change the weight value. 
+```
+
+```{r}
+par(mfrow = c(2, 2))
+plot(m1)
+# the Q-Q plot varies away from normal by the end.LEverage shows some outliers. 
+```
+
+
+```{r}
+m2 <-  lm(mpg ~ cylinders * displacement + displacement * weight, data = Auto)
+summary(m2)
+# The interaction between displacement and weight is statistically ssignificant. In both * and :
+```
+
+```{r}
+# After playing around and looking at the scatterplots, it seems mostly linear and I feel like it wouldnt change or make a better model. 
+```
+
+# 10
+```{r}
+head(Carseats)
+summary(Carseats)
+```
+
+```{r}
+m3 <- lm(Sales ~ Price + Urban + US, data = Carseats)
+summary(m3)
+? Carseats
+```
+
+```{r}
+# FOr each value of price (which is the amoung a company charges for car sears at each site) the amounf of sales (in thousands) decreases by 0.054
+# UrbanYes is if it is urban, then the sales decrease by -.021916. This isnt statisically significant
+# For USYES, if US is yes, then the sales increase by at least 1.2 thousand sales. 
+```
+
+```{r}
+# Sales = Price*-.054459 - UrbanYes*-0.021916 + USYes*1.200573
+```
+
+```{r}
+# We should get rid of Urban Yes
+```
+
+
+```{r}
+m4 = lm(Sales ~ Price+US, data= Carseats)
+summary(m4)
+```
+
+```{r}
+# While the models are statiscially significant, when looking at the 0.2354 R^2. This model only explains 23.54% of the variance, which does not fit the model well. 
+```
+
+```{r}
+confint(m3)
+confint(m4)
+# AH, UrbanYes is also statistically insignificant because the confit interval crosses the 0. 
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(m4)
+# There is no evidence higher leverage
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
